@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Calor - pH y Cloro Residual</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin=""/>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+        }
+        h2 {
+            color: #333;
+        }
+        #map {
+            height: 550px;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .controls button {
+            padding: 8px 15px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .controls button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Monitoreo de Calidad de Agua (pH y Cloro)</h2>
+
+    <div class="controls">
+        <button onclick="cambiarVista('ph')">Ver solo pH</button>
+        <button onclick="cambiarVista('cloro')">Ver solo Cloro</button>
+        <button onclick="cambiarVista('ambos')">Ver Ambos</button>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+            crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+    <script>
+        var map = L.map('map').setView([-18.011, -70.230], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var datosPh = [
+            [-17.997555, -70.220535, 0.5],
+            [-17.997235, -70.219973, 0.42],
+            [-17.998338, -70.221006, 0.42],
+            [-17.997633, -70.220313, 0.5],
+            [-17.999242, -70.221357, 0.42],
+            [-17.999422, -70.221676, 0.42],
+            [-18.008067, -70.228714, 0.5],
+            [-18.009452, -70.227222, 0.42],
+            [-18.012519, -70.224806, 0.42],
+            [-18.009949, -70.227572, 0.5],
+            [-18.010000, -70.230583, 0.5],
+            [-18.009976, -70.230598, 0.57],
+            [-18.011856, -70.230363, 0.5],
+            [-18.011736, -70.233212, 0.53],
+            [-18.013238, -70.23639, 0.35],
+            [-18.014237, -70.237030, 0.35],
+            [-18.013455, -70.237051, 0.35],
+            [-18.013248, -70.237070, 0.42],
+            [-17.997776, -70.220045, 0.42],
+            [-17.997912, -70.220414, 0.5],
+            [-17.991657, -70.208070, 0.5],
+            [-17.984185, -70.207269, 0.35],
+            [-17.987447, -70.204948, 0.35],
+            [-17.988082, -70.204329, 0.35],
+            [-17.988425, -70.204175, 0.35],
+            [-17.982279, -70.203749, 0.35],
+            [-17.981993, -70.203545, 0.35],
+            [-17.981642, -70.203192, 0.35],
+            [-17.979979,- 70.200944, 0.35],
+            [-17.979223, -70.199984, 0.42],
+            [-17.977722, -70.197880, 0.35],
+            [-17.998099, -70.220549, 0.5],
+            [-17.989890, -70.207632, 0.35]
+        ];
+
+        var datosCloro = [
+            [-17.997633, -70.220313, 0.8],
+            [-17.997235, -70.219973, 0.6],
+            [-17.997633, -70.220313, 0.8],
+            [-17.999242, -70.221357, 0.6],
+            [-17.999422, -70.221676, 0.4],
+            [-18.009452, -70.227222, 1],
+            [-18.010000, -70.230583, 1],
+            [-18.011856, -70.230363, 0.6],
+            [-18.011736, -70.233212, 0.2],
+            [-18.013238, -70.23639, 0.8],
+            [-18.014237, -70.237030, 0.6],
+            [-18.013455, -70.237051, 1],
+            [-18.013248, -70.237070, 0.8],
+            [-17.997776, -70.220045, 0.6],
+            [-17.997912, -70.220414, 0.8],
+            [-17.991657, -70.208070, 0.6],
+            [-17.984185, -70.207269, 0.6],
+            [-17.984661, -70.207026, 0.2],
+            [-17.988082, -70.204329, 1],
+            [-17.981642, -70.203192, 0.6],
+            [-17.979979,- 70.200944, 0.6],
+            [-17.979223, -70.199984, 0.8],
+            [-17.977722, -70.197880, 1],
+            [-17.934473, -70.182243, 0.2],
+            [-17.998099, -70.220549, 0.8],
+            [-17.989890, -70.207632, 0.6]
+        ];
+
+        var opcionesPh = { 
+            radius: 40, 
+            blur: 15, 
+            maxZoom: 17, 
+            max: 1.0, 
+            minOpacity: 0.4 
+        };
+
+        var opcionesCloro = { 
+            radius: 25, 
+            blur: 15, 
+            maxZoom: 17, 
+            max: 1.0, 
+            minOpacity: 0.4,
+            gradient: { 0.2: 'blue', 0.6: 'lime', 1.0: 'red' } 
+        };
+
+        var capaPh = L.heatLayer(datosPh, opcionesPh);
+        var capaCloro = L.heatLayer(datosCloro, opcionesCloro);
+
+        capaPh.addTo(map);
+
+        function cambiarVista(tipo) {
+            if (map.hasLayer(capaPh)) map.removeLayer(capaPh);
+            if (map.hasLayer(capaCloro)) map.removeLayer(capaCloro);
+
+            if (tipo === 'ph') {
+                capaPh.addTo(map);
+            } else if (tipo === 'cloro') {
+                capaCloro.addTo(map);
+            } else if (tipo === 'ambos') {
+                capaPh.addTo(map);
+                capaCloro.addTo(map);
+            }
+        }
+    </script>
+</body>
+</html>
